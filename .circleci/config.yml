@@ -9,8 +9,7 @@ restore_node_modules: &restore_node_modules
     name: Restore node_modules cache
     keys:
       - v1-node-{{ .Branch }}-{{ checksum "package.json" }}
-      - v1-node-{{ .Branch }}-
-      - v1-node-
+      - v1-node-{{ checksum "package.json" }}
 jobs:
   install:
     <<: *defaults
@@ -38,24 +37,15 @@ jobs:
       - run:
           name: Lint
           command: npm run lint
-  test_gas_limit:
+  test_api:
     <<: *defaults
     steps:
       - attach_workspace:
           at: ~/project
       - *restore_node_modules
       - run:
-          name: testBlockchainBlockGasLimit
-          command: npm run testBlockchainBlockGasLimit
-  test_total_difficulty:
-    <<: *defaults
-    steps:
-      - attach_workspace:
-          at: ~/project
-      - *restore_node_modules
-      - run:
-          name: testBlockchainTotalDifficulty
-          command: npm run testBlockchainTotalDifficulty
+          name: testAPI
+          command: npm run testAPI
   test_state_byzantium:
     <<: *defaults
     steps:
@@ -74,6 +64,24 @@ jobs:
       - run:
           name: testStateConstantinople
           command: npm run testStateConstantinople
+  test_state_petersburg:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - *restore_node_modules
+      - run:
+          name: testStatePetersburg
+          command: npm run testStatePetersburg
+  test_blockchain:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - *restore_node_modules
+      - run:
+          name: testBlockchain
+          command: npm run testBlockchain
   coveralls:
     <<: *defaults
     steps:
@@ -91,16 +99,19 @@ workflows:
       - lint:
           requires:
             - install
-      - test_gas_limit:
-          requires:
-            - install
-      - test_total_difficulty:
+      - test_api:
           requires:
             - install
       - test_state_byzantium:
           requires:
             - install
       - test_state_constantinople:
+          requires:
+            - install
+      - test_state_petersburg:
+          requires:
+            - install
+      - test_blockchain:
           requires:
             - install
       - coveralls:
